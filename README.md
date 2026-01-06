@@ -1,4 +1,4 @@
-# FIL-based-IDS-using-hybrid-supervised-and-unsupervised-models
+# IL-based-IDS-using-hybrid-supervised-and-unsupervised-models
 
 ## Mục tiêu
 Mục tiêu của đề tài hướng tới xây dựng hệ thống Phát hiện xâm nhập mạng dựa trên mô hình
