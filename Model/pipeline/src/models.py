@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 import xgboost as xgb
 from collections import Counter
 
-# ==================== 1. DEEP AUTOENCODER (Requested Version) ====================
+# ==================== 1. DEEP AUTOENCODER ====================
 class AnomalyAE(nn.Module):
     def __init__(self, input_dim=81, latent_dim=32):
         super(AnomalyAE, self).__init__()
@@ -66,17 +66,15 @@ class AETrainer:
                 errors.append(torch.mean((batch - self.model(batch))**2, dim=1).cpu().numpy())
             return np.concatenate(errors)
 
-    # [Compatibility] Thêm hàm này để Pipeline gọi không bị lỗi
     def is_normal(self, X):
         return self.get_reconstruction_errors(X) <= self.known_threshold
 
     def save_model(self, p): os.makedirs(os.path.dirname(p), exist_ok=True); torch.save({'st': self.model.state_dict(), 'th': self.known_threshold}, p)
     def load_model(self, p): ckpt = torch.load(p, map_location=self.device, weights_only=False); self.model.load_state_dict(ckpt['st']); self.known_threshold = ckpt['th']
 
-# ==================== 2. INCREMENTAL OCSVM (Requested Version) ====================
+# ==================== 2. INCREMENTAL OCSVM ====================
 class IncrementalOCSVM:
     def __init__(self, nu=0.15, random_state=42):
-        # Nystroem 800 components như yêu cầu
         self.feature_map = Nystroem(gamma=0.1, random_state=random_state, n_components=1000)
         self.model = SGDOneClassSVM(nu=nu, random_state=random_state, shuffle=True)
         self.is_fitted = False
@@ -96,7 +94,7 @@ class IncrementalOCSVM:
     def save_model(self, p): os.makedirs(os.path.dirname(p), exist_ok=True); joblib.dump({'model': self.model, 'map': self.feature_map, 'fitted': self.is_fitted}, p)
     def load_model(self, p): d = joblib.load(p); self.model, self.feature_map, self.is_fitted = d['model'], d['map'], d['fitted']
 
-# ==================== 3. XGBOOST (Giữ nguyên để Pipeline hoạt động) ====================
+# ==================== 3. XGBOOST ====================
 class OpenSetXGBoost:
     def __init__(self, confidence_threshold=0.7, max_classes_buffer=20):
         self.confidence_threshold = confidence_threshold

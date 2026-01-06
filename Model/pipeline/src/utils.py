@@ -62,7 +62,7 @@ class ResourceTracker:
             'duration': duration,
             'avg_cpu': np.mean(self.history['cpu']) if self.history['cpu'] else 0,
             'max_ram': np.max(self.history['ram']) if self.history['ram'] else 0,
-            'avg_gpu': avg_gpu, # New metric
+            'avg_gpu': avg_gpu,
             'history': self.history
         }
 

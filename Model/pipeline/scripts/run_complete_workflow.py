@@ -16,7 +16,7 @@ from src.utils import (
 )
 
 def run_complete_workflow():
-    print("🚀 STARTING COMPLETE WORKFLOW")
+    print("STARTING COMPLETE WORKFLOW")
     tracker = ResourceTracker()
     il_metrics = ILMetrics()
     global_history = {} 
@@ -24,8 +24,7 @@ def run_complete_workflow():
     os.makedirs("results/overall", exist_ok=True)
 
     try:
-        # === Scenario 0 ===
-        print("\n📚 Scenario 0"); tracker.start()
+        print("\n Scenario 0"); tracker.start()
         from Scenario0 import Scenario0_initial_training
         models0, loader, pipeline0, acc_s0, metrics_s0 = Scenario0_initial_training()
         res0 = tracker.stop()
@@ -35,8 +34,7 @@ def run_complete_workflow():
         global_history['Scenario 0'] = metrics_s0
         plot_detailed_resource_usage(res0['history'], "Scenario 0", "results/Scenario0/resource_detail.png")
         
-        # === Scenario 1 ===
-        print("\n🔍 Scenario 1"); tracker.start()
+        print("\n Scenario 1"); tracker.start()
         from Scenario1 import Scenario1_workflow
         pipeline1, results_s1 = Scenario1_workflow()
         res1 = tracker.stop()
@@ -49,7 +47,7 @@ def run_complete_workflow():
         plot_detailed_resource_usage(res1['history'], "Scenario 1", "results/Scenario1/resource_detail.png")
         
         # === Scenario 2 ===
-        print("\n🎯 Scenario 2"); tracker.start()
+        print("\n Scenario 2"); tracker.start()
         from Scenario2 import Scenario2_workflow
         pipeline2, results_s2 = Scenario2_workflow()
         res2 = tracker.stop()
@@ -63,7 +61,7 @@ def run_complete_workflow():
         plot_detailed_resource_usage(res2['history'], "Scenario 2", "results/Scenario2/resource_detail.png")
         
         # === PLOTTING GLOBAL ===
-        print("\n📊 Generating Global Charts...")
+        print("\n Generating Global Charts...")
         plot_il_metrics_trends(il_metrics, "results/overall/il_trends.png")
         plot_il_matrix(il_metrics, "results/overall/il_matrix.png")
         plot_all_models_performance(global_history, "results/overall")
@@ -72,9 +70,9 @@ def run_complete_workflow():
         rlog = {'Scenario 0': res0, 'Scenario 1': res1, 'Scenario 2': res2}
         plot_resource_usage(rlog, "results/overall/resources_summary.png")
         
-        print(f"\nFinal BWT: {il_metrics.history['BWT'][-1]:.4f}")
-        print("🎉 DONE!")
+        print(f"\n Final BWT: {il_metrics.history['BWT'][-1]:.4f}")
+        print("DONE!")
         
-    except Exception as e: print(f"💥 Error: {e}"); import traceback; traceback.print_exc()
+    except Exception as e: print(f"Error: {e}"); import traceback; traceback.print_exc()
 
 if __name__ == "__main__": run_complete_workflow()

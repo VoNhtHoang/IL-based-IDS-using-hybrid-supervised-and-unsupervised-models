@@ -19,13 +19,9 @@ def load_replay_buffer(path, samples_per_label=10000):
     loader = ScenarioDataLoader()
     loader.load_scaler(GLOBAL_SCALER_PATH)
     
-    # 1. Load dữ liệu thô và Scale ngay lập tức
-    # Lưu ý: Cần scale trước khi tính khoảng cách (Euclidean) để đảm bảo chính xác
     X, y = loader.load_data_raw(path)
     X = loader.apply_scaling(X, fit=False)
     
-    # 2. Chuyển sang DataFrame để áp dụng logic chọn mẫu của bạn
-    # Tạo tên cột giả định vì X là numpy array
     feature_cols = [f'feature_{i}' for i in range(X.shape[1])]
     df = pd.DataFrame(X, columns=feature_cols)
     df['Label'] = y
@@ -34,21 +30,18 @@ def load_replay_buffer(path, samples_per_label=10000):
     unique_labels = np.unique(y)
     
     size_herding = int(samples_per_label * 0.25)
-    # size_random = samples_per_label - size_herding (tính động bên dưới)
 
     print(f"Replay Buffer Strategy: Processing {len(unique_labels)} classes from {path}...")
 
     for label in unique_labels:
         samples_key = df[df["Label"] == label]
         
-        # Nếu số lượng mẫu ít hơn yêu cầu thì lấy hết
         if len(samples_key) <= samples_per_label:
             chunks.append(samples_key)
             continue
             
         selected_indices = set()
         
-        # --- BƯỚC 1: HERDING (Lấy mẫu gần Mean nhất) ---
         class_features = samples_key[feature_cols].values
         
         # Tính Mean class (Centroid)
@@ -57,39 +50,30 @@ def load_replay_buffer(path, samples_per_label=10000):
         # Tính khoảng cách Euclidean từ mỗi điểm đến Mean
         distances = cdist(class_features, class_mean, metric='euclidean').flatten()
         
-        # Gán cột tạm dist để sort
         samples_key = samples_key.assign(dist_to_mean=distances)
         
-        # Lấy top 20% gần nhất
         herding_df = samples_key.nsmallest(size_herding, 'dist_to_mean')
         herding_idx = herding_df.index
         selected_indices.update(herding_idx)
         
-        # Bỏ cột dist để clean data
         samples_key = samples_key.drop(columns=['dist_to_mean'])
         
-        # --- BƯỚC 2: RANDOM (Lấy ngẫu nhiên phần còn lại) ---
         remaining_needed = samples_per_label - len(selected_indices)
         
         if remaining_needed > 0:
-            # Loại bỏ những mẫu đã lấy ở bước Herding
             potential_random = samples_key.drop(index=list(selected_indices))
             
-            # Sample ngẫu nhiên
             random_sample_df = potential_random.sample(n=min(remaining_needed, len(potential_random)), random_state=42)
             selected_indices.update(random_sample_df.index)
         
-        # Lưu kết quả của class này
         chunks.append(samples_key.loc[list(selected_indices)])
         gc.collect()
 
-    # 3. Gộp và Shuffle
     combined_df = pd.concat(chunks, ignore_index=True)
     combined_df = combined_df.sample(frac=1, random_state=42).reset_index(drop=True)
     
     print(f"Replay Buffer created: {len(combined_df)} samples.")
 
-    # 4. Tách lại X, y để trả về đúng định dạng pipeline
     y_new = combined_df['Label'].values
     X_new = combined_df.drop(columns=['Label']).values
     

@@ -127,7 +127,7 @@ def run_ablation_full():
     except Exception as e:
         print(f"   [!] Could not plot unknown comparison: {e}")
     
-    print("\n✅ Ablation Study Completed! Results saved in 'results/ablation_study'")
+    print("\nAblation Study Completed! Results saved in 'results/ablation_study'")
 
 if __name__ == "__main__":
     run_ablation_full()
