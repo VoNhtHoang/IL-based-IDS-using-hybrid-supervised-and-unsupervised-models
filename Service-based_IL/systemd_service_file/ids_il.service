@@ -1,5 +1,5 @@
 [Unit]
-Description=IDS Incremental Learning Job
+Description=IDS Incremental Learning Job for IDS
 After=network.target
 
 [Service]
@@ -8,6 +8,7 @@ User=root
 WorkingDirectory=/opt/incremental_ids
 ExecStart=/opt/incremental_ids/venv/bin/python -m src.job.il_job
 TimeoutStartSec=0
+Restart=no
 
 [Install]
 WantedBy=multi-user.target

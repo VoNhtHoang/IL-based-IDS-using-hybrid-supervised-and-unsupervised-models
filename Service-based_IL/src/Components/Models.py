@@ -91,9 +91,19 @@ class AETrainer(Model):
     def is_normal(self, X):
         return self.get_reconstruction_errors(X) <= self.known_threshold
 
-    def save_model(self, p): os.makedirs(os.path.dirname(p), exist_ok=True); torch.save({'st': self.model.state_dict(), 'th': self.known_threshold}, p)
-    def load_model(self, p): ckpt = torch.load(p, map_location=self.device, weights_only=False); self.model.load_state_dict(ckpt['st']); self.known_threshold = ckpt['th'] ; self.loaded = True
-
+    def save_model(self, p, version = 0, date_modified = "2025-12-21 00:00:00"): 
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        torch.save({'st': self.model.state_dict(), 'th': self.known_threshold, 'ver': version, 'date_m': date_modified}, p)
+    
+    def load_model(self, p):
+        ckpt = torch.load(p, map_location=self.device, weights_only=False); 
+        self.model.load_state_dict(ckpt['st']); self.known_threshold = ckpt['th'] ; 
+        self.loaded = True
+    
+    def load_model_info(self, p):
+        d = torch.load(p, map_location=self.device, weights_only=False); 
+        return getattr(d, 'ver', 'N/A'), getattr(d, 'date_m', 'N/A')
+        # return 'N/A', 'N/A'
 # ==================== 2. INCREMENTAL OCSVM (Requested Version) ====================
 class IncrementalOCSVM(Model):
     def __init__(self, nu=0.15, random_state=42):
@@ -117,9 +127,19 @@ class IncrementalOCSVM(Model):
 
     def decision_function(self, X): return self.model.decision_function(self.feature_map.transform(X))
     
-    def save_model(self, p): os.makedirs(os.path.dirname(p), exist_ok=True); joblib.dump({'model': self.model, 'map': self.feature_map, 'fitted': self.is_fitted}, p)
-    def load_model(self, p): d = joblib.load(p); self.model, self.feature_map, self.is_fitted = d['model'], d['map'], d['fitted']; self.loaded= True
-
+    def save_model(self, p, version = 0, date_modified = "2025-12-21 00:00:00"): 
+        os.makedirs(os.path.dirname(p), exist_ok=True)
+        joblib.dump({'model': self.model, 'map': self.feature_map, 'fitted': self.is_fitted, 'ver': version, 'date_m': date_modified}, p)
+    
+    def load_model(self, p): 
+        d = joblib.load(p);
+        self.model, self.feature_map, self.is_fitted = d['model'], d['map'], d['fitted']; 
+        self.loaded= True
+    
+    def load_model_info(self, p):
+        d=joblib.load(p);
+        return getattr(d, 'ver', 'N/A'), getattr(d, 'date_m', 'N/A')
+        # return 'N/A', 'N/A'
 # ==================== 3. XGBOOST (Giữ nguyên để Pipeline hoạt động) ====================
 class OpenSetXGBoost(Model):
     def __init__(self, confidence_threshold=0.75, max_classes_buffer=20):
@@ -169,5 +189,15 @@ class OpenSetXGBoost(Model):
     def safe_incremental_retrain(self, X_old, y_old, X_new, y_new):
         self.train(np.vstack([X_old, X_new]), np.hstack([y_old, y_new]), is_incremental=True)
 
-    def save_model(self, p): os.makedirs(os.path.dirname(p), exist_ok=True); joblib.dump({'m': self.model, 'le': self.label_encoder, 're': self.reverse_encoder, 'c': self.confidence_threshold}, p)
-    def load_model(self, p): d=joblib.load(p); self.model, self.label_encoder, self.reverse_encoder, self.confidence_threshold = d['m'], d['le'], d['re'], d['c']; self.loaded=True
+    def save_model(self, p, version = 0, date_modified = "2025-12-21 00:00:00"): 
+        os.makedirs(os.path.dirname(p), exist_ok=True); 
+        joblib.dump({'m': self.model, 'le': self.label_encoder, 're': self.reverse_encoder, 'c': self.confidence_threshold, 'ver': version, 'date_m': date_modified}, p)
+    
+    def load_model(self, p):
+        d=joblib.load(p); 
+        self.model, self.label_encoder, self.reverse_encoder, self.confidence_threshold = d['m'], d['le'], d['re'], d['c']; 
+        self.loaded=True
+    
+    def load_model_info(self, p):
+        d=joblib.load(p);
+        return getattr(d, 'ver', 'N/A'), getattr(d, 'date_m', 'N/A')

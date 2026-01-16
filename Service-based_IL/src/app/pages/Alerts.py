@@ -19,6 +19,7 @@ from core.Load_Alerts import Load_Data, COLS_TO_DROP
 # MAIN
 # ======================
 
+
 def main():
     st.markdown(" ## <i class='bi bi-exclamation-diamond'></i> Realtime IDS Alerts Log", unsafe_allow_html= True)
     
@@ -231,7 +232,7 @@ def main():
         
         # Tổng số alerts đã lọc
         total_alerts = len(df_filtered)
-        col1.metric("Tổng alerts", total_alerts)
+        col1.metric("Số alerts đang được hiển thị", f"{total_alerts}/200")
         
         # Phân loại alerts
         if "Label" in df_filtered.columns:
@@ -243,7 +244,7 @@ def main():
             unknown_count = unknown_mask.sum() if isinstance(unknown_mask, pd.Series) else 0
             
             col2.metric("🟢 Benign", benign_count)
-            col3.metric("🔴 Attack", attack_count)
+            col3.metric("🔴 Attack", attack_count - unknown_count)
             col4.metric("⚪ Unknown", unknown_count)
         else:
             col2.metric("🟢 Benign", 0)

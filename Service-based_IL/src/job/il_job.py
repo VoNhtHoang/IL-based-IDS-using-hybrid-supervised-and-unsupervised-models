@@ -1,6 +1,7 @@
 # Standard libs
-import sys
+import os, sys
 import time
+import fcntl
 from pathlib import Path
 from datetime import datetime
 
@@ -20,16 +21,52 @@ LOCK_FILE = incremental_settings.IL_LOCK_FILE
 STATE_FILE = incremental_settings.IL_STATE_FILE
 
 # ===== LOCK =====
-def acquire_lock():
+
+# Toàn cục
+lock_file_handle = None
+
+def acquire_lock_old():
     if LOCK_FILE.exists():
         print(f"{LOG_PREFIX} Another IL job is running. Exit.")
         return False
     LOCK_FILE.touch()
     return True
 
+def acquire_lock():
+    global lock_file_handle
+    try:
+        # Mở file lock (tạo mới nếu chưa có)
+        lock_file_handle = open(LOCK_FILE, 'w')
+        
+        # Cố gắng lấy lock độc quyền (LOCK_EX) 
+        # Chế độ Non-blocking (LOCK_NB): Nếu đang có người giữ lock, trả về lỗi ngay thay vì đợi
+        fcntl.flock(lock_file_handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
+        
+        # Ghi PID vào file để tiện theo dõi (Optional)
+        lock_file_handle.write(str(os.getpid()))
+        lock_file_handle.flush()
+        return True
+    
+    except (IOError, OSError):
+        print(f"{LOG_PREFIX} Another IL job is running. Exit.")
+        if lock_file_handle:
+            lock_file_handle.close()
+        return False
+
 def release_lock():
+    global lock_file_handle
+    try:
+        if lock_file_handle:
+            # Giải phóng lock và đóng file
+            fcntl.flock(lock_file_handle, fcntl.LOCK_UN)
+            lock_file_handle.close()
+    except Exception as e:
+        print(f"{LOG_PREFIX} Error releasing lock: {e}")
+
+def release_lock_old():
     if LOCK_FILE.exists():
         LOCK_FILE.unlink()
+
 
 # ===== STATE =====
 def load_state():
@@ -79,12 +116,15 @@ def run_incremental_learning(state, last_update_time, current_update_time):
 
 # ===== MAIN =====
 def main():
+    print(f"{LOG_PREFIX} Triggered at {datetime.now()}")
+    
     if not acquire_lock():
         return 0
+    
     try:
         state = load_state()
-        
         current_update_time = datetime.now()
+        
         if not should_retrain(state, current_update_time=current_update_time):
             print(f"{LOG_PREFIX} Skip retrain (interval not reached)")
             return 0
@@ -96,9 +136,6 @@ def main():
         
         # print("Come")
         res = run_incremental_learning(state, last_update_time, current_update_time)
-
-        del last_update_time
-        gc.collect()
         
         # NẾU CÓ RETRAIN - lưu state
         if res:
@@ -107,17 +144,16 @@ def main():
             save_state(state)
             print(f"{LOG_PREFIX} Model updated to v{state['model_version']}")
 
-        del current_update_time, state
-        gc.collect()
         return 0
     
     except Exception as e:
         print(f"{LOG_PREFIX} ERROR: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
 
     finally:
         release_lock()
-        
 
 if __name__ == "__main__":
     sys.exit(main())

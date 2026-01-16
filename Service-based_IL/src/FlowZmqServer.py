@@ -267,8 +267,8 @@ if __name__ == "__main__":
         detect_batch_size=256,
         detect_queue_size= 100000, # 
         log_queue_size= 100000,
-        flush_batch_size= 12800,
-        flush_queue_size= 100000,
+        flush_batch_size= 1280,
+        flush_queue_size= 10000,
         n_workers=5
     )
 

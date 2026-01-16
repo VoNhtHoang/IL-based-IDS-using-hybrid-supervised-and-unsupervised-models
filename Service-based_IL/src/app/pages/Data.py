@@ -211,7 +211,7 @@ def main():
     #         st.success("Copy Success!")
     
     with st.container(border=True):
-        st.markdown(f"### <i class='bi bi-copy'></i> Copy file dữ liệu lớn", unsafe_allow_html=True)
+        st.markdown(f"### <i class='bi bi-copy'></i> Copy file dữ liệu hàng loạt", unsafe_allow_html=True)
         
         # 1. Lấy danh sách các thư mục con trong DATA_DIR (thường là các thư mục ngày tháng)
         base_path = Path(settings.DATA_DIR)
@@ -260,7 +260,7 @@ def main():
                         # Cập nhật progress bar
                         progress_bar.progress((idx + 1) / len(selected_file_names))
                     
-                    st.success(f"Đã copy thành công {len(selected_file_names)} file vào thư mục Incremental!")
+                    st.success(f"Đã copy thành công {len(selected_file_names)} file vào thư mục Incremental {incremental_settings.IL_DATA_DIR}!")
                     
     # =====================================================
     # SECTION B — JSONL ALERTS

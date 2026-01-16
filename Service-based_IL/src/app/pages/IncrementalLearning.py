@@ -46,7 +46,16 @@ def main():
                     else:
                         new_val = current_value
                     new_values[field_name] = new_val
-                    
+                
+                #
+                new_values["herding_replay_ratio"] = st.slider(
+                    "Herding Replay Ratio",
+                    0.1, 0.8, step=0.05,
+                    key="herding_replay_ratio",
+                    value = getattr(incremental_settings, "herding_replay_ratio")
+                    # on_change=
+                )
+                
             with st.container(border=True):
                 st.markdown("### <i class='bi bi-app-indicator'></i> Current Label Samples", unsafe_allow_html=True)
                 st.json(incremental_settings.IL_LABEL())
@@ -58,6 +67,7 @@ def main():
                     key="enable_training",
                     value = getattr(incremental_settings, "enable_training")
                 )
+            
 
             # Nút lưu thủ công (dự phòng)
             if st.form_submit_button("✔ Lưu cấu hình ngay", type="primary"):

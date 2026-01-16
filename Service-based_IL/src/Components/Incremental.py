@@ -1,7 +1,6 @@
-# scripts/session1.py
-
 # STANDARD LIBS
 import os, sys
+import shutil
 from datetime import datetime
 
 # 3rd libs
@@ -23,6 +22,8 @@ from src.Components.Models import AETrainer, IncrementalOCSVM, OpenSetXGBoost
 from src.Components.Detector import SequentialHybridPipeline
 from src.Utils.utils import *
 from src.Utils.func_convert import astype_il
+
+
 class IncrementalLearning():
     def __init__(self, last_update_time: datetime, current_update_time: datetime, il_data_dir :Path, il_logs_dir:Path, current_index) -> None:
         # self.last_update_time = datetime.strptime(last_update_time, "%Y-%m-%d %H-%M-%S")
@@ -35,7 +36,8 @@ class IncrementalLearning():
         self.il_data_dir = il_data_dir
         self.il_logs_dir = il_logs_dir / f"{datetime.strftime(self.current_update_time, '%Y-%m-%d')}_{self.current_index}"
         self.il_logs_dir.mkdir(parents=True, exist_ok=True)
-                
+              
+        self.corrupt_dir = Path(il_data_dir / "corrupt_files")  
         # DATA
         self.df = self.load_current_train_data()
         self.should_train= True
@@ -78,17 +80,27 @@ class IncrementalLearning():
             try:
                 name =self.get_timestr(file.name)
                 timeobj=datetime.strptime(name, "%Y-%m-%d %H:%M:%S")
+            
+                # print(self.last_update_time, "" , timeobj, "", self.current_update_time)
+                if self.last_update_time < timeobj and timeobj < self.current_update_time:
+                    print(" - ", file.name)
+                    # print(timeobj)
+                    # print(True)
+                    dfs.append(pd.read_parquet(file))
+            
             except Exception as e:
                 print("[INCREMENTAL] Error while loaddata: ", e)
+                try:
+                    self.corrupt_dir.mkdir(exist_ok=True)
+                    shutil.move(str(file), str(self.corrupt_dir / os.path.basename(file)))
+                    print(f"[INCREMENTAL] Moved corrupt file to {self.corrupt_dir}")
+                except Exception as move_err:
+                    print(f"[INCREMENTAL] Could not move corrupt file: {move_err}")
+    
                 continue
             
-            # print(self.last_update_time, "" , timeobj, "", self.current_update_time)
-            if self.last_update_time < timeobj and timeobj < self.current_update_time:
-                print(" - ", file.name)
-                # print(timeobj)
-                # print(True)
-                dfs.append(pd.read_parquet(file))
             gc.collect()
+            
             
         if len(dfs) < 1:
             return None
@@ -141,7 +153,7 @@ class IncrementalLearning():
         
         feature_cols = [col for col in self.df.columns if col not in ["Flow ID", "Timestamp", "Label", "Binary Label"]]
         
-        size_herding =  int(self.sample_per_label* 0.2)
+        size_herding =  int(self.sample_per_label* incremental_settings.herding_replay_ratio)
         # size_random = self.sample_per_label - size_herding
         
         chunks = []
@@ -265,7 +277,7 @@ class IncrementalLearning():
         results['metrics']['AE'] = ae_rep
         results['metrics']['OCSVM'] = oc_rep
         
-        mgr.save_models([xgb, ocsvm, ae])
+        mgr.save_models([xgb, ocsvm, ae], self.current_index +1)
         
         # loader0 = SessionDataLoader(); loader0.load_scaler(GLOBAL_SCALER_PATH)
         # X0 = loader0.apply_scaling(loader0.load_data_raw(s0_test)[0], fit=False); y0 = loader0.load_data_raw(s0_test)[1]

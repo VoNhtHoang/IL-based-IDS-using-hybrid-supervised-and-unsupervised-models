@@ -21,14 +21,16 @@ class Manager:
                 print("[ERROR] Manager.py - Dir không tồn tại!")
                 exit(0)
         
-        if dir_out is None or current_update_time is None:
-            return
-        self.dir_out = dir_out
-        self.dir_out.mkdir(parents=True, exist_ok = True)
-        self.current_update_time= datetime.strftime(current_update_time, "%Y-%m-%d %H:%M:%S")
-        self.current_update_time = self.current_update_time.replace(":", "-")
+        # if dir_out is None or current_update_time is None:
+        #     return
+        if dir_out is not None and current_update_time is not None:
+            
+            self.dir_out = dir_out
+            self.dir_out.mkdir(parents=True, exist_ok = True)
+            self.current_update_time= datetime.strftime(current_update_time, "%Y-%m-%d %H:%M:%S")
+            self.current_update_time = self.current_update_time.replace(":", "-")
         
-        self.dir_out = Path(self.dir_out/f"{self.current_update_time}")
+            self.dir_out = Path(self.dir_out/f"{self.current_update_time}")
         
     def check_dir(self, dir_in):
         dir_in = Path(dir_in)
@@ -59,8 +61,27 @@ class Manager:
             models[index].load_model(dir_in/models[index].model_name)
         print("[MANAGER] Models Loaded Successfully")
     
-    def save_models(self, models: list):
+    # dành cho UI
+    def load_models_info(self, models: list):
+        dir_in = Path(self.dir_in)
+        res_info = {}
+        
         for index in range(len(models)):
-            models[index].save_model(self.dir_out/models[index].model_name)
+            res_info[f'{models[index].model_name}'] = models[index].load_model_info(dir_in/models[index].model_name)
+            # print(f"[MANAGER] {dir_in/models[index].model_name}")
+        print("[MANAGER] Models Info Loaded!")
+        
+        return res_info
+        
+        
+    def save_models(self, models: list, version=0):
+        for index in range(len(models)):
+            models[index].save_model(self.dir_out/models[index].model_name, version, self.current_update_time)
         print("[MANAGER] Models Saved Successfully")
+    
+    
+        
+        
+        
+    
         

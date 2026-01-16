@@ -818,7 +818,7 @@ def main():
     
     with col2:        
         # Service controls
-        st.markdown("**🎛️ Service Controls:**")
+        st.markdown("** Service Controls:**")
         selected_service = st.selectbox(
             "Chọn service",
             [s['name'] for s in services_info],

@@ -136,8 +136,8 @@ class FlowFlushTransformer:
             Path.mkdir(temp, parents=True, exist_ok=True)
             
         fname = (
-            # self.out_dir / self.curr_folder / f"{self.file_prefix}_{self.curr_index}.parquet"
-             self.out_dir / self.curr_folder / f"275kpps-20s.parquet"
+            self.out_dir / self.curr_folder / f"{self.file_prefix}_{self.curr_index}.parquet"
+            #  self.out_dir / self.curr_folder / f"275kpps-20s.parquet"
         )
         
         self.curr_index +=1

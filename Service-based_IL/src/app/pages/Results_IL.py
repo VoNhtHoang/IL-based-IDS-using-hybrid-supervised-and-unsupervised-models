@@ -1,8 +1,11 @@
+# 1rd libs
 import os
+import shutil
 from datetime import datetime
 from pathlib import Path
 
-
+# 3rd libs
+import joblib
 import streamlit as st
 from PIL import Image
 
@@ -10,6 +13,12 @@ from PIL import Image
 # Local Import
 from src.config.settings import settings
 from src.config.incremental_config import incremental_settings
+
+from src.Components.Manager import Manager
+from src.Components.Models import AETrainer, IncrementalOCSVM, OpenSetXGBoost
+
+
+# MAIN
 
 def main():
     st.set_page_config(layout="wide", page_title="Xem kết quả Incremental Learning theo ngày")
@@ -108,76 +117,141 @@ def main():
         else:
             selected_image_path = None
             st.warning("Không có thư mục nào để hiển thị")
+        
+        st.markdown("### <i class='bi bi-calendar'></i> Phiên bản các model hiện tại", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            if Path.exists(settings.MODEL_DIR):
+                ae = AETrainer(81, 32); ocsvm = IncrementalOCSVM(nu=0.15); xgb = OpenSetXGBoost(0.75);
+                
+                mgr = Manager(settings.MODEL_DIR)
+                # mgr.load_models([xgb, ocsvm, ae])
+                res_info = mgr.load_models_info([xgb, ocsvm, ae])
+                # print(f"[PY] Model State: {xgb.loaded}, {ocsvm.loaded}, {ae.loaded}")
+                
+                info_cols = st.columns([1,1,1])
+                for i, (m_name, info) in enumerate(res_info.items()):
+                    with info_cols[i]:
+                        st.caption(f"{m_name}")
+                        st.write(f"**Ver:** {info[0]}")
+                        st.write(f"**Date:** {info[1]}")
+                        
+            del ae, ocsvm, xgb
+        
+        # Cập nhật model nếu cần
+        st.markdown("### <i class='bi bi-calendar'></i> Các model mới", unsafe_allow_html=True)
+        model_dir = Path(settings.MODEL_DIR / "pre_models")
+        
+        model_folders = []
+        if Path.exists(model_dir):
+            model_folders = [f for f in Path(model_dir).iterdir() if f.is_dir()]
+        
+        if len(model_folders )> 0:
+            selected_model_folder = st.selectbox( 
+                "≡ Chọn thư mục để xem:",
+                model_folders,
+                key="model_selector"
+            )
+            
+        with st.container(border=True):
+            if Path.exists(selected_model_folder):
+                ae = AETrainer(81, 32); ocsvm = IncrementalOCSVM(nu=0.15); xgb = OpenSetXGBoost(0.75);
+                
+                mgr = Manager(selected_model_folder)
+                # mgr.load_models([xgb, ocsvm, ae])
+                res_info = mgr.load_models_info([xgb, ocsvm, ae])
+                # print(f"[PY] Model State: {xgb.loaded}, {ocsvm.loaded}, {ae.loaded}")
+                
+                info_cols = st.columns([1,1,1])
+                for i, (m_name, info) in enumerate(res_info.items()):
+                    with info_cols[i]:
+                        st.caption(f"{m_name}")
+                        st.write(f"**Ver:** {info[0]}")
+                        st.write(f"**Date:** {info[1]}")
+        
+        if st.button("Copy vào thư mục hoạt động"):
+            if not selected_model_folder:
+                st.warning("Vui lòng chọn ít nhất một folder.")
+            else:
+                for index, model in enumerate([xgb, ocsvm, ae]):
+                    f = model.model_name
+                    f = Path(selected_model_folder/f"{f}")
+                    shutil.copy(f.resolve(), Path(settings.MODEL_DIR))
+                                
+                st.success(f"Đã copy thành công các model từ {selected_model_folder} file vào thư mục Incremental {settings.MODEL_DIR}! Restart các worker để thấy hiệu lực!")
     
     with col2:
-        st.markdown("### <i class='bi bi-image'></i> Xem ảnh", unsafe_allow_html=True)
-        
-        if selected_image_path and os.path.exists(selected_image_path):
-            try:
-                # Mở và hiển thị ảnh
-                image = Image.open(selected_image_path)
-                
-                # Hiển thị thông tin ảnh
-                st.caption(f"Ảnh: {os.path.basename(selected_image_path)}")
-                
-                # Tạo tabs để xem ảnh ở các kích thước khác nhau
-                tab1, tab2, tab3 = st.tabs(["Xem ảnh", "Kích thước gốc", "Thông tin"])
-                
-                with tab1:
-                    # Hiển thị ảnh toàn màn hình
-                    st.image(image, use_container_width=True)
-                
-                with tab2:
-                    # Hiển thị ảnh kích thước gốc
-                    st.image(image)
-                
-                with tab3:
-                    # Hiển thị thông tin ảnh
-                    st.write(f"**Kích thước:** {image.size[0]} x {image.size[1]} pixels")
-                    st.write(f"**Định dạng:** {image.format}")
-                    st.write(f"**Chế độ:** {image.mode}")
-                    st.write(f"**Đường dẫn:** {selected_image_path}")
+        st.markdown("### <i class='bi bi-image'></i> Xem ảnh & Đổi mô hình huấn luyện hiện tại", unsafe_allow_html=True)
+        with st.container():
+            if selected_image_path and os.path.exists(selected_image_path):
+                try:
+                    # Mở và hiển thị ảnh
+                    image = Image.open(selected_image_path)
                     
-                    # Hiển thị ảnh nhỏ trong tab thông tin
-                    st.image(image, width=300)
+                    # Hiển thị thông tin ảnh
+                    st.caption(f"Ảnh: {os.path.basename(selected_image_path)}")
+                    
+                    # Tạo tabs để xem ảnh ở các kích thước khác nhau
+                    tab1, tab2, tab3 = st.tabs(["Xem ảnh", "Kích thước gốc", "Thông tin"])
+                    
+                    with tab1:
+                        # Hiển thị ảnh toàn màn hình
+                        st.image(image, use_container_width=True)
+                    
+                    with tab2:
+                        # Hiển thị ảnh kích thước gốc
+                        st.image(image)
+                    
+                    with tab3:
+                        # Hiển thị thông tin ảnh
+                        st.write(f"**Kích thước:** {image.size[0]} x {image.size[1]} pixels")
+                        st.write(f"**Định dạng:** {image.format}")
+                        st.write(f"**Chế độ:** {image.mode}")
+                        st.write(f"**Đường dẫn:** {selected_image_path}")
+                        
+                        # Hiển thị ảnh nhỏ trong tab thông tin
+                        st.image(image, width=300)
+                    
+                    # Nút tải ảnh xuống
+                    with open(selected_image_path, "rb") as file:
+                        btn = st.download_button(
+                            label="↧ Tải ảnh xuống",
+                            data=file,
+                            file_name=os.path.basename(selected_image_path),
+                            mime=f"image/{image.format.lower() if image.format else 'jpeg'}"
+                        )
+                    
+                except Exception as e:
+                    st.error(f"Không thể mở ảnh: {str(e)}")
+            elif selected_image_path:
+                st.error(f"Không tìm thấy file: {selected_image_path}")
+            else:
+                st.info("Vui lòng chọn một thư mục và ảnh để xem")
                 
-                # Nút tải ảnh xuống
-                with open(selected_image_path, "rb") as file:
-                    btn = st.download_button(
-                        label="↧ Tải ảnh xuống",
-                        data=file,
-                        file_name=os.path.basename(selected_image_path),
-                        mime=f"image/{image.format.lower() if image.format else 'jpeg'}"
-                    )
+                # Hiển thị hướng dẫn
+                st.markdown("""
+                ### Hướng dẫn sử dụng:
+                1. **Chọn ngày** ở cột bên trái
+                2. **Chọn thư mục** từ danh sách
+                3. **Chọn ảnh** từ thư mục đã chọn
+                4. **Xem ảnh** ở cột bên phải
                 
-            except Exception as e:
-                st.error(f"Không thể mở ảnh: {str(e)}")
-        elif selected_image_path:
-            st.error(f"Không tìm thấy file: {selected_image_path}")
-        else:
-            st.info("Vui lòng chọn một thư mục và ảnh để xem")
+                ### Cấu trúc thư mục đề xuất:
+                ```
+                images/
+                ├── event_2024-01-15_du-lich/
+                │   ├── anh1.jpg
+                │   ├── anh2.jpg
+                │   └── anh3.png
+                ├── meeting_2024-01-20_cong-ty/
+                │   ├── hinh1.jpg
+                │   └── hinh2.png
+                └── birthday_2024-01-25_sinh-nhat/
+                    └── birthday_photo.jpg
+                ```
+                
+                Lưu ý: Tên thư mục nên chứa ngày theo định dạng YYYY-MM-DD
+                """)
             
-            # Hiển thị hướng dẫn
-            st.markdown("""
-            ### Hướng dẫn sử dụng:
-            1. **Chọn ngày** ở cột bên trái
-            2. **Chọn thư mục** từ danh sách
-            3. **Chọn ảnh** từ thư mục đã chọn
-            4. **Xem ảnh** ở cột bên phải
-            
-            ### Cấu trúc thư mục đề xuất:
-            ```
-            images/
-            ├── event_2024-01-15_du-lich/
-            │   ├── anh1.jpg
-            │   ├── anh2.jpg
-            │   └── anh3.png
-            ├── meeting_2024-01-20_cong-ty/
-            │   ├── hinh1.jpg
-            │   └── hinh2.png
-            └── birthday_2024-01-25_sinh-nhat/
-                └── birthday_photo.jpg
-            ```
-            
-            Lưu ý: Tên thư mục nên chứa ngày theo định dạng YYYY-MM-DD
-            """)
+                
+                

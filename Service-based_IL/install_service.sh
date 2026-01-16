@@ -131,3 +131,5 @@ echo "Check status:"
 for svc in "${SERVICES[@]}"; do
   echo "  systemctl status ${svc%.service}"
 done
+
+echo " systemctl status ids_il.timer"

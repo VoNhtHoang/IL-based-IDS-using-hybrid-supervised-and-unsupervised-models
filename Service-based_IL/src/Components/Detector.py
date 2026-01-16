@@ -14,7 +14,7 @@ class Detectors_Pipeline:
         self.xgb = xgb
         # Chuyển label_map thành mảng để truy xuất nhanh bằng index
         self.labels = np.array(["Benign", "DDoS", "DoS", "Reconn", "MITM_ArpSoofing", "DNS_Spoofing", "Unknown"])
-        self.CONF_REJECT = 0.5
+        self.CONF_REJECT = 0.7
         self.CONF_HIGH = 0.9
 
     def simple_predict(self, X):

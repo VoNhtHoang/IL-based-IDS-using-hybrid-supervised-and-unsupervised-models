@@ -2,9 +2,10 @@
 Description=Timer Check Interval IL every 5 min
 
 [Timer]
-OnBootSec=5min
-OnUnitActiveSec=5min
+OnActiveSec=1min
+OnUnitActiveSec=3min
 Persistent=true
+Unit=ids_il.service
 
 [Install]
 WantedBy=timers.target

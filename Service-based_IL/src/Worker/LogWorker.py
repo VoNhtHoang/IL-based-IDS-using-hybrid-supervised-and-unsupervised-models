@@ -66,10 +66,17 @@ class LogWorker(threading.Thread):
     
                 
     def save_log(self, indexdf):
-        # log_file = self.save_dir / f"{datetime.now().date()}.jsonl"
-        log_file = self.save_dir / f"275kpps-20s.jsonl"
+        log_file = self.save_dir / f"{datetime.now().date()}.jsonl"
+        # log_file = self.save_dir / f"275kpps-20s.jsonl"
 
         Path(log_file).touch(exist_ok=True)
+        timestamp_numeric = pd.to_numeric(indexdf['Timestamp'], errors='coerce')
+        # indexdf['Timestamp'] = pd.to_datetime(timestamp_numeric, unit='ms')
+        # indexdf['Timestamp'] = indexdf['Timestamp'].dt.strftime('%Y-%m-%d %H:%M:%S')
+        indexdf['Timestamp'] = (pd.to_datetime(timestamp_numeric, unit='ms')
+                           .dt.tz_localize('UTC') # Xác định đây là giờ gốc
+                           .dt.tz_convert('Asia/Ho_Chi_Minh') # Chuyển sang giờ VN
+                           .dt.strftime('%Y-%m-%d %H:%M:%S'))
         
         indexdf.to_json(
             log_file, 

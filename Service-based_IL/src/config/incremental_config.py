@@ -43,6 +43,12 @@ class IncrementalSettings(BaseSettings):
         self.IL_LABEL_FILE.write_text(json.dumps(new_label, indent=2, ensure_ascii=False))
         print(f"[IL Settings] Đã cập nhật IL_LABEL: {new_label}")
     
+    herding_replay_ratio: float = Field(
+        default=0.2,
+        ge=0.1, le=0.8,
+        description="Tỷ lệ dữ liệu gần trung bình được lấy để train"
+    )
+    
     # # Dataset
     # initial_train_ratio: float = Field(
     #     default=0.5,

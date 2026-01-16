@@ -4,9 +4,10 @@ import os
 import csv
 from datetime import datetime
 
-# Từ khóa để nhận diện bộ công cụ của bạn
-KEYWORDS = ["cic.cs.unb.ca", "FlowZmqServer", "python3", "java"]
-LOG_FILE = "src/Monitor/275kpps-20s.csv"
+
+KEYWORDS = ["cic.cs.unb.ca", "FlowZmqServer", "java"]
+# LOG_FILE = "src/Monitor/275kpps-20s.csv"
+LOG_FILE = f"src/Monitor/{datetime.now().date()}.csv"
 
 def get_total_metrics():
     total_ram = 0.0
@@ -16,7 +17,6 @@ def get_total_metrics():
     
     for proc in psutil.process_iter(['pid', 'name', 'cmdline']):
         try:
-            # Kiểm tra xem tiến trình có thuộc bộ công cụ không
             cmdline = " ".join(proc.info['cmdline'] or [])
             if any(key in cmdline for key in KEYWORDS):
                 # Cộng dồn RAM (RSS)

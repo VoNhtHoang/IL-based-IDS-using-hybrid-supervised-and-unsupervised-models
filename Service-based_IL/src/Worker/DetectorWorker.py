@@ -70,8 +70,8 @@ class DetectorWorker(threading.Thread):
         try:
             while self.running:
                 try:
-                    starttime = time.perf_counter()
-                    df = self.q.get(timeout=0.2) 
+                    # starttime = time.perf_counter()
+                    df = self.q.get(timeout=0.2)
                     df = self.quick_parse(df)
                     
                     # df = df.decode("utf-8")
@@ -88,25 +88,25 @@ class DetectorWorker(threading.Thread):
                     if df.empty:
                         continue
                     
-                    t1 = time.perf_counter() - starttime
+                    # t1 = time.perf_counter() - starttime
                     
                     indexdf, X, _ = self.flowFlushTransformer.detect(df)
                     
-                    t2 = time.perf_counter() - (starttime + t1)
+                    # t2 = time.perf_counter() - (starttime + t1)
                     
                     res = self.pipeline.simple_predict(X)  
                     
-                    t3 = time.perf_counter() - (starttime + t1 + t2)
+                    # t3 = time.perf_counter() - (starttime + t1 + t2)
                     
                     self.save_alert(indexdf, res)
                     
-                    t4 = time.perf_counter() - (starttime + t1 +t2 +t3)
+                    # t4 = time.perf_counter() - (starttime + t1 +t2 +t3)
                     
                     self.q.task_done()
 
                     gc.collect()
                     
-                    print(f"[Detector-{self.worker_id}] Parse: {t1:.4f}s | Transform: {t2:.4f}s | Predict: {t3:.4f}s | Push Alert: {t4:.4f}s" )
+                    # print(f"[Detector-{self.worker_id}] Parse: {t1:.4f}s | Transform: {t2:.4f}s | Predict: {t3:.4f}s | Push Alert: {t4:.4f}s" )
                 except queue.Empty:
                     continue
                 
