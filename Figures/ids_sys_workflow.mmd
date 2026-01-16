@@ -1,0 +1,110 @@
+---
+config:
+  themeVariables:
+    clusterBorder: '#424242'
+    clusterBkg: '#fafafa'
+  layout: dagre
+---
+flowchart TB
+ subgraph subGraph0["<span style=font-size:30px;padding-left:350px;>CAPTURE</span>"]
+        A["Network Interface"]
+        top_space[" "]
+        C["ids_cicextract.service"]
+  end
+ subgraph subGraph1["<span style=font-size:30px;padding-left:500px;>ZMQSERVER</span>"]
+        E["ids_flowzmqserver.service"]
+        F["Worker Pool, Queue"]
+  end
+ subgraph subGraph2["<span style=font-size:30px>WORKERS</span>"]
+        G["Detect Workers"]
+        H["Log Worker"]
+        I["Flush Worker"]
+  end
+ subgraph subGraph5["<span style=font-size:30px;padding-right:150px;>IL_AUTOMATION</span>"]
+        top_space1[" "]
+        P["ids_il.timer"]
+        Q["ids_il.service"]
+        R["Incremental Learning"]
+  end
+ subgraph subGraph3["<br><br><br><br><br><br><br><br><br><br><br><br><br><br> <span style=font-size:30px>STORAGE/DATABASE</span>"]
+        J["app_logs/"]
+        K["flows_parquet/"]
+        L["train_data/"]
+  end
+ subgraph subGraph4["<br><br><br><br><br><br><br><br><br><br><br><br><br><br> <span style=font-size:30px;padding-left:320px>DASHBOARD</span>"]
+        M["ids_dashboard.service"]
+        N["Web Interface"]
+  end
+    
+    X["User 👤"] <-- "<span style=font-size:30px;font-weight:bold>(4) Interact</span>" --> N
+    A --> C
+    top_space --- C
+    E --> F
+    C -- "<span style=font-size:30px;font-weight:bold>(1) Sending Extracted Data</span>" --> F
+    F --> G & H & I
+    H -- "<span style=font-size:30px;font-weight:bold>(2) Save Alerts</span>" --> J
+    G -- "<span style=font-size:30px;font-weight:bold>(2) Detected Data</span>" --> H
+    I -- "<span style=font-size:30px;font-weight:bold>(2) Save Data</span>" --> K
+    K -- "<span style=font-size:30px;font-weight:bold>(3) Data Load</span>" --> M
+    J -- "<span style=font-size:30px;font-weight:bold>(3) Alerts Load</span>" --> M
+    M -- "<span style=font-size:30px;font-weight:bold>(5) Export Data</span>" --> L
+    M <--> N
+    L L_L_R_0@--> R
+    top_space1 --- P
+    P --> Q
+    Q --> R
+    R -- "<span style=font-size:30px;font-weight:bold>(6) Update Models </span>" --> G
+
+     A:::layer1
+     A:::sieu_to
+     C:::layer1
+     C:::sieu_to
+     E:::layer2
+     E:::sieu_to
+     F:::layer2
+     F:::sieu_to
+     G:::layer3
+     G:::sieu_to
+     H:::layer3
+     H:::sieu_to
+     I:::layer3
+     I:::sieu_to
+     P:::layer6
+     P:::sieu_to
+     Q:::layer6
+     Q:::sieu_to
+     R:::layer6
+     R:::sieu_to
+     J:::layer4
+     J:::sieu_to
+     K:::layer4
+     K:::sieu_to
+     L:::layer4
+     L:::sieu_to
+     M:::layer5
+     M:::sieu_to
+     N:::layer5
+     N:::sieu_to
+     X:::sieu_to
+    classDef layer1 fill:#bbdefb
+    classDef layer2 fill:#c8e6c9
+    classDef layer3 fill:#fff9c4
+    classDef layer4 fill:#ffccbc
+    classDef layer5 fill:#e1bee7
+    classDef layer6 fill:#f8bbd0
+    classDef title font-size:30px
+    classDef sieu_to font-size:30px,font-weight:bold
+    style top_space fill:none,stroke:none
+    style top_space1 fill:none,stroke:none 
+    style subGraph0 font-weight:bold
+    style subGraph1 font-weight:bold
+    style subGraph2 font-weight:bold
+    style subGraph3 font-weight:bold
+    style subGraph4 font-weight:bold
+    style subGraph5 font-weight:bold
+    linkStyle 2 stroke:none,stroke-width:0px,fill:none
+    linkStyle 16 stroke:none,stroke-width:0px,fill:none
+    %% linkStyle 0 stroke:none,stroke-width:0px,fill:none
+    %% linkStyle 1 stroke:none,stroke-width:0px,fill:none
+
+    L_L_R_0@{ curve: linear }

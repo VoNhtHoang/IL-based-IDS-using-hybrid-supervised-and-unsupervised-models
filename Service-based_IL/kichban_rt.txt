@@ -17,8 +17,6 @@ sudo timeout 20s hping3 --rand-source -S -p 80 -i u30 -q veth1
 
 
 
-
 # Excel
-
 =AVERAGE(B2:INDIRECT("B" & ROW() - 1))
 =AVERAGE(C2:INDIRECT("C" & ROW() - 1))
