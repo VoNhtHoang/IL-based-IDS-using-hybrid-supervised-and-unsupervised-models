@@ -1,18 +1,27 @@
-# Illustration
+## 1. Description
+- A realtime intrusion detection system based on the proposed system architecture.
 
+![Sơ đồ hoạt động của Realtime IDS](img/ids_sys_workflow.png)
 
-# How to use this archirtecture as a service
+## 2. How to use this archirtecture as services
 - Chạy với các lệnh phía bên dưới:
-> sudo chmod +x install.sh
-> sudo ./install.sh
+```
+sudo chmod +x install.sh
+sudo ./install.sh
+```
 
+## 3. Results on web after implementation
+- After deploying the system and putting it under load.
+![Tài nguyên tiêu tốn khi hệ thống đang chịu tải](img/res_monitor_co_tai.png)
 
-# CÁC CÔNG PHÁP FIX LỖI/BẾ TẮC
+## 4. Fix bugs, errors if happen
 ### PIP REQUIREMENTS
-Dùng luôn pigar
-> pigar generate
+- If you need to freeze requirements.txt
+```
+pigar generate
+```
 
-### SERVICE
+### Install requirements
 ```
 while read p; do
   echo "Installing $p"
@@ -20,7 +29,8 @@ while read p; do
 done < requirements.txt
 ```
 
-### Công pháp pip
+### If pip freeze does not work
+
 ```
 pip list --format=freeze > requirements.txt
 ```
